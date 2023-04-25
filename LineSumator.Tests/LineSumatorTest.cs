@@ -92,6 +92,50 @@ namespace LineSumator.Tests
             CollectionAssert.AreEquivalent(result.LinesWithErrors, new[] { 1, 3, 4 });
         }
 
+        [TestMethod]
+        public void OmitZeros()
+        {
+            var result = GetResultFromString(
+                "0.1,0.2,1214\n" +
+                ".4,1.5,1.6\n" +
+                "2.4,-.5,1.6\n" +
+                "2.4,5,.6\n" +
+                "2.4,1,12."
+            );
+
+            Assert.AreEqual(result.LineWithMaxSum, 1);
+            CollectionAssert.AreEquivalent(result.LinesWithErrors, new[] { 2, 3, 4, 5 });
+        }
+
+        [TestMethod]
+        public void AllIncorrectValues()
+        {
+            var result = GetResultFromString(
+                "\n" +
+                ".6\n" +
+                "-.5,1.6\n" +
+                "2.4,5,.6\n" +
+                "2.4,1,12."
+            );
+
+            Assert.AreEqual(result.LineWithMaxSum, null);
+            CollectionAssert.AreEquivalent(result.LinesWithErrors, new[] { 1, 2, 3, 4, 5 });
+        }
+
+        [TestMethod]
+        public void TwoMaxResults()
+        {
+            var result = GetResultFromString(
+                "1, 2, 3, 4, 5\n" +
+                "-1, -2, -3, -4, -5\n" +
+                "1, 2, 3, 4, 5\n" +
+                "-1, -2, -3, -4, -5"
+            );
+
+            Assert.AreEqual(result.LineWithMaxSum, 3);
+            Assert.AreEqual(result.LinesWithErrors.Count, 0);
+        }
+
         private static LineSumCalculateResult GetResultFromString(string text)
         {
             using var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(text));

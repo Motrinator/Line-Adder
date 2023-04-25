@@ -35,7 +35,6 @@
                 {
                     char character = buffer[i];
 
-
                     if (lineSumContext.ErrorInLine)
                     {
                         if (character is '\n')
@@ -96,8 +95,7 @@
                                     continue;
                                 }
 
-                                lineSumContext.FoundPoint = true;
-                                lineSumContext.AddCharacterToNumber(character);
+                                lineSumContext.AddFloatPointToNumber(character);
 
                                 break;
                             }
@@ -108,8 +106,7 @@
                                     lineSumContext.AddLineNumberToErrorList();
                                 }
 
-                                lineSumContext.FoundSign = true;
-                                lineSumContext.AddCharacterToNumber(character);
+                                lineSumContext.AddSignToNumber(character);
 
                                 break;
                             }

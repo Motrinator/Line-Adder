@@ -53,6 +53,18 @@ namespace LineSumator
             _builder.Append(character);
         }
 
+        public void AddFloatPointToNumber(char character)
+        {
+            FoundPoint = true;
+            AddCharacterToNumber(character);
+        }
+
+        public void AddSignToNumber(char character)
+        {
+            FoundSign = true;
+            AddCharacterToNumber(character);
+        }
+
         public void AddToSum()
         {
             var number = _builder.ToString();
