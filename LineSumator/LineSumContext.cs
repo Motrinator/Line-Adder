@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace LineSumator
 {
@@ -15,6 +18,8 @@ namespace LineSumator
         public bool IsEmptyNum => _builder.Length == 0;
         public bool HasOneSymbol => _builder.Length == 1;
         public bool IsLastSymbolPoint => _builder.Length > 0 && _builder[^1] == '.';
+        public bool IsInvalidNumber => IsEmptyNum || (HasOneSymbol && (FoundSign || FoundPoint)) || IsLastSymbolPoint;
+        public bool IsInvalidNumForPoint => FoundTrimEnd || IsEmptyNum || FoundPoint || (HasOneSymbol && FoundSign);
 
         private decimal? _maxSum;
         private int? _maxSumIndex;
@@ -32,7 +37,7 @@ namespace LineSumator
         {
             ErrorInLine = false;
             SumInLine = null;
-            Reset();
+            ResetNumberState();
 
             _lineIndex++;
         }
@@ -52,7 +57,7 @@ namespace LineSumator
         {
             var number = _builder.ToString();
 
-            Reset();
+            ResetNumberState();
 
             if (!decimal.TryParse(number, out var result))
             {
@@ -94,7 +99,7 @@ namespace LineSumator
             _linesWithErrors.Add(_lineIndex);
         }
 
-        private void Reset()
+        private void ResetNumberState()
         {
             FoundTrimEnd = false;
             FoundPoint = false;
@@ -104,7 +109,7 @@ namespace LineSumator
 
         internal LineSumCalculateResult GetResult()
         {
-            return new LineSumCalculateResult(_maxSumIndex, _linesWithErrors);
+            return new LineSumCalculateResult(_maxSumIndex, _linesWithErrors.AsReadOnly());
         }
     }
 }

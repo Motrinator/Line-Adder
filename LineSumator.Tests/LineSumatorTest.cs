@@ -1,3 +1,5 @@
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.IO;
 using System.Text;
 
 namespace LineSumator.Tests
@@ -8,13 +10,11 @@ namespace LineSumator.Tests
         [TestMethod]
         public void CheckAllValidValues()
         {
-            using var stream = GetStreamFromString(
+            var result = GetResultFromString(
                 "0.1,0.2,0.3\n" +
                 "1.4,1.5,1.6\n" +
                 "2.7,2.8,2.8"
             );
-
-            var result = LineSum.Calculate(stream);
 
             Assert.AreEqual(result.LineWithMaxSum, 3);
             Assert.AreEqual(result.LinesWithErrors.Count, 0);
@@ -23,53 +23,83 @@ namespace LineSumator.Tests
         [TestMethod]
         public void CheckTrim()
         {
-            using var stream = GetStreamFromString(
+            var result = GetResultFromString(
                  " 0.1 ,\t0.2 ,\t\t0.3\n" +
                  "1.4, 1.5  ,1.6\n" +
                  "\t  2.7 ,2.8, 2.8   "
              );
-
-            var result = LineSum.Calculate(stream);
 
             Assert.AreEqual(result.LineWithMaxSum, 3);
             Assert.AreEqual(result.LinesWithErrors.Count, 0);
         }
 
         [TestMethod]
-        public void CheckOverflow()
+        public void CheckOverflowInNumber()
         {
-            using var stream = GetStreamFromString(
+            var result = GetResultFromString(
                 "0.1,0.2,99999999999999999999999999999\n" +
                 "1.4,1.5,1.6\n" +
-                "2.7," + (decimal.MaxValue - 1)
+                "2.7,2.8,2.9"
             );
 
-            var result = LineSum.Calculate(stream);
-
-            Assert.AreEqual(result.LineWithMaxSum, 2);
-            Assert.AreEqual(result.LinesWithErrors.Count, 2);
+            Assert.AreEqual(result.LineWithMaxSum, 3);
+            Assert.AreEqual(result.LinesWithErrors.Count, 1);
             Assert.AreEqual(result.LinesWithErrors[0], 1);
-            Assert.AreEqual(result.LinesWithErrors[1], 3);
         }
 
         [TestMethod]
-        public void Test()
+        public void CheckOverflowInSum()
         {
-            using var stream = GetStreamFromString(
-                "0.1,0.2,1212,\n" +
+            var result = GetResultFromString(
+                "0.1,0.2,0.3\n" +
                 "1.4,1.5,1.6\n" +
-                "-"
+                "2.7,2.8,2.9," + (decimal.MaxValue)
             );
+
+            Assert.AreEqual(result.LineWithMaxSum, 2);
+            Assert.AreEqual(result.LinesWithErrors.Count, 1);
+            Assert.AreEqual(result.LinesWithErrors[0], 3);
+        }
+
+        [TestMethod]
+        public void CheckOnlySignInNumber()
+        {
+            var result = GetResultFromString(
+                "0.1,0.2,1212\n" +
+                "1.4,1.5,1.6\n" +
+                "-\n" +
+                "-, 1212, 2121\n" +
+                "1212, -, 1221\n" +
+                "1212, 2121, -\n" +
+                "1212, 2121, +121"
+            );
+
+            Assert.AreEqual(result.LineWithMaxSum, 1);
+            CollectionAssert.AreEquivalent(result.LinesWithErrors, new[] { 3, 4, 5, 6, 7 });
+        }
+
+        [TestMethod]
+        public void CheckEmptyLines()
+        {
+            var result = GetResultFromString(
+                "0.1,0.2,1214,\n" +
+                "1.4,1.5,1.6\n" +
+                "\n" +
+                "  \t"
+            );
+
+            Assert.AreEqual(result.LineWithMaxSum, 2);
+            CollectionAssert.AreEquivalent(result.LinesWithErrors, new[] { 1, 3, 4 });
+        }
+
+        private static LineSumCalculateResult GetResultFromString(string text)
+        {
+            using var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(text));
+            using var stream = new StreamReader(memoryStream);
 
             var result = LineSum.Calculate(stream);
 
-            Assert.AreEqual(result.LineWithMaxSum, 1);
-            Assert.AreEqual(result.LinesWithErrors.Count, 1);
-        }
-
-        private static StreamReader GetStreamFromString(string text)
-        {
-            return new StreamReader(new MemoryStream(Encoding.UTF8.GetBytes(text)));
+            return result;
         }
     }
 }

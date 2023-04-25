@@ -9,7 +9,15 @@
                 throw new ArgumentNullException(nameof(streamReader));
             }
 
-            streamReader.BaseStream.Position = 0;
+            if (!streamReader.BaseStream.CanRead)
+            {
+                throw new InvalidOperationException("The stream cannot be read.");
+            }
+
+            if (streamReader.BaseStream.Position != 0)
+            {
+                streamReader.BaseStream.Position = 0;
+            }
 
             var lineSumContext = new LineSumContext();
             Span<char> buffer = stackalloc char[50];
@@ -27,7 +35,6 @@
                 {
                     char character = buffer[i];
 
-                    if (character == '\r') { continue; }
 
                     if (lineSumContext.ErrorInLine)
                     {
@@ -41,19 +48,17 @@
 
                     switch (character)
                     {
+                        case '\r': continue;
                         case '\n':
                         case ',':
                             {
-                                if (lineSumContext.IsEmptyNum || (lineSumContext.HasOneSymbol && (lineSumContext.FoundSign || lineSumContext.FoundPoint)) || lineSumContext.IsLastSymbolPoint)
+                                if (lineSumContext.IsInvalidNumber)
                                 {
-                                    if (!lineSumContext.IsEmptyNum)
-                                    {
-                                        lineSumContext.AddLineNumberToErrorList();
-                                    }
+                                    lineSumContext.AddLineNumberToErrorList();
 
                                     if (character is '\n')
                                     {
-                                        lineSumContext.CalculateLineSum();
+                                        lineSumContext.NewLine();
                                     }
 
                                     continue;
@@ -84,12 +89,7 @@
                             }
                         case '.':
                             {
-                                if (
-                                    lineSumContext.FoundTrimEnd ||
-                                    lineSumContext.IsEmptyNum ||
-                                    lineSumContext.FoundPoint ||
-                                    (lineSumContext.HasOneSymbol && lineSumContext.FoundSign)
-                                )
+                                if (lineSumContext.IsInvalidNumForPoint)
                                 {
                                     lineSumContext.AddLineNumberToErrorList();
 
@@ -137,10 +137,18 @@
                 }
             }
 
-            if (!lineSumContext.ErrorInLine)
+            if (!lineSumContext.ErrorInLine && !lineSumContext.IsInvalidNumber)
             {
                 lineSumContext.AddToSum();
-                lineSumContext.CalculateLineSum();
+
+                if (!lineSumContext.ErrorInLine)
+                {
+                    lineSumContext.CalculateLineSum();
+                }
+            }
+            else if (!lineSumContext.ErrorInLine && lineSumContext.IsInvalidNumber)
+            {
+                lineSumContext.AddLineNumberToErrorList();
             }
 
             return lineSumContext.GetResult();

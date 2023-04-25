@@ -1,11 +1,13 @@
-﻿namespace LineSumator
+﻿using System.Collections.ObjectModel;
+
+namespace LineSumator
 {
-    public readonly struct LineSumCalculateResult
+    public readonly ref struct LineSumCalculateResult
     {
         public readonly int? LineWithMaxSum;
-        public readonly IReadOnlyList<int> LinesWithErrors;
+        public readonly ReadOnlyCollection<int> LinesWithErrors;
 
-        public LineSumCalculateResult(int? lineWithMaxSum, IReadOnlyList<int> linesWithErrors)
+        public LineSumCalculateResult(int? lineWithMaxSum, ReadOnlyCollection<int> linesWithErrors)
         {
             LineWithMaxSum = lineWithMaxSum;
             LinesWithErrors = linesWithErrors;
